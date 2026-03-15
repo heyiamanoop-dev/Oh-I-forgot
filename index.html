@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Oh! I Forgot">
+<link rel="manifest" href="manifest.json">
+<title>Oh! I Forgot</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e17;
+    --bg2: #1a1a2e;
+    --bg3: #16213e;
+    --card: #1e1e3a;
+    --card2: #252547;
+    --accent: #ff6b6b;
+    --accent2: #ffd93d;
+    --accent3: #6bcb77;
+    --accent4: #4d96ff;
+    --text: #fffffe;
+    --text2: #a7a9be;
+    --text3: #6e7191;
+    --border: rgba(255,255,255,0.08);
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Nunito Sans', sans-serif; overflow: hidden; }
+  
+  /* ---- SCREENS ---- */
+  .screen { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+  .screen.active { display: flex; }
+  
+  /* ---- SCROLLABLE CONTENT ---- */
+  .scroll-body { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
+  .scroll-body::-webkit-scrollbar { display: none; }
+
+  /* ---- HEADER ---- */
+  .header { padding: 16px 16px 8px; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; }
+  .header h1 span { color: var(--accent); }
+  .back-btn { background: var(--card); border: none; color: var(--text); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+
+  /* ---- BOTTOM NAV ---- */
+  .bottom-nav { background: var(--bg2); border-top: 1px solid var(--border); display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px; transition: color 0.2s; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+  .nav-btn span { font-size: 10px; font-weight: 600; }
+
+  /* ---- HOME SCREEN ---- */
+  .search-wrap { padding: 12px 16px; background: var(--bg); }
+  .search-box { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 50px; padding: 10px 16px; }
+  .search-box svg { flex-shrink: 0; color: var(--text3); width: 18px; height: 18px; }
+  .search-box input { background: none; border: none; color: var(--text); font-size: 15px; outline: none; flex: 1; font-family: 'Nunito Sans', sans-serif; }
+  .search-box input::placeholder { color: var(--text3); }
+
+  .section-title { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 8px; }
+
+  /* ---- ROOMS ---- */
+  .rooms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .room-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .room-card:active { transform: scale(0.97); }
+  .room-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--radius) var(--radius) 0 0; }
+  .room-card.c0::before { background: var(--accent); }
+  .room-card.c1::before { background: var(--accent2); }
+  .room-card.c2::before { background: var(--accent3); }
+  .room-card.c3::before { background: var(--accent4); }
+  .room-card.c4::before { background: #c77dff; }
+  .room-card.c5::before { background: #ff9a3c; }
+  .room-icon { font-size: 28px; margin-bottom: 6px; }
+  .room-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px; }
+  .room-count { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .add-room-btn { background: var(--card2); border: 2px dashed var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 80px; transition: border-color 0.2s; }
+  .add-room-btn:active { border-color: var(--accent); }
+  .add-room-btn span { font-size: 24px; color: var(--text3); }
+  .add-room-btn p { font-size: 12px; color: var(--text3); }
+
+  /* ---- RECENT ITEMS ---- */
+  .item-list { display: flex; flex-direction: column; gap: 10px; }
+  .item-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; display: flex; gap: 12px; cursor: pointer; transition: all 0.2s; }
+  .item-card:active { transform: scale(0.98); }
+  .item-thumb { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--card2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .item-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-location { font-size: 12px; color: var(--accent4); margin-top: 2px; }
+  .item-desc { font-size: 12px; color: var(--text2); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .item-alarm { font-size: 11px; color: var(--accent2); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+  /* ---- ALARMS BADGE ---- */
+  .alarm-badge { background: var(--accent); color: white; font-size: 10px; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; position: absolute; top: -4px; right: -4px; }
+
+  /* ---- ROOM DETAIL ---- */
+  .room-header-img { width: 100%; height: 120px; background: linear-gradient(135deg, var(--card2), var(--card)); display: flex; align-items: center; justify-content: center; font-size: 60px; }
+  .sublocation-list { display: flex; flex-direction: column; gap: 8px; }
+  .subloc-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
+  .subloc-card:active { background: var(--card2); }
+  .subloc-name { font-weight: 700; font-size: 15px; flex: 1; }
+  .subloc-count { font-size: 12px; color: var(--text3); }
+  .chevron { color: var(--text3); font-size: 14px; }
+
+  /* ---- ADD ITEM SCREEN ---- */
+  .photo-area { background: var(--card2); border: 2px dashed var(--border); border-radius: var(--radius); min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; overflow: hidden; position: relative; }
+  .photo-area img { width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius); }
+  .photo-area .photo-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border-radius: 50px; padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  .photo-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .photo-placeholder svg { width: 48px; height: 48px; color: var(--text3); }
+  .photo-placeholder p { font-size: 14px; color: var(--text3); }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .form-input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text); font-size: 15px; font-family: 'Nunito Sans', sans-serif; outline: none; transition: border-color 0.2s; }
+  .form-input:focus { border-color: var(--accent4); }
+  .form-input::placeholder { color: var(--text3); }
+  textarea.form-input { resize: none; min-height: 80px; }
+  select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e7191' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px; padding-right: 40px; }
+
+  .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius); font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:active { transform: scale(0.98); background: #ff5252; }
+  .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:active { background: var(--card2); }
+  .btn-success { background: var(--accent3); color: var(--bg); }
+  .btn-danger { background: #ff4d4d33; border: 1px solid #ff4d4d55; color: #ff6b6b; }
+
+  /* ---- TAGS ---- */
+  .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag-chip { background: var(--card2); border: 1px solid var(--border); border-radius: 50px; padding: 5px 12px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .tag-chip.selected { background: var(--accent4); border-color: var(--accent4); color: white; font-weight: 700; }
+
+  /* ---- SEARCH RESULTS ---- */
+  .search-results { display: flex; flex-direction: column; gap: 8px; }
+  .search-result-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; display: flex; gap: 12px; }
+  .result-img { width: 50px; height: 50px; border-radius: 8px; background: var(--card2); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .result-img img { width: 100%; height: 100%; object-fit: cover; }
+  .result-info { flex: 1; }
+  .result-name { font-weight: 800; font-size: 14px; }
+  .result-path { font-size: 11px; color: var(--accent4); margin-top: 2px; }
+
+  /* ---- ITEM DETAIL ---- */
+  .detail-photo { width: 100%; height: 250px; object-fit: cover; background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 80px; }
+  .detail-photo img { width: 100%; height: 250px; object-fit: cover; }
+  .detail-info { padding: 16px; }
+  .detail-name { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; }
+  .detail-location-path { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--accent4); margin-top: 6px; flex-wrap: wrap; }
+  .detail-desc { font-size: 14px; color: var(--text2); margin-top: 12px; line-height: 1.6; }
+  .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .detail-tag { background: var(--accent4)22; border: 1px solid var(--accent4)55; color: var(--accent4); border-radius: 50px; padding: 4px 12px; font-size: 12px; }
+  .detail-alarm { background: var(--accent2)22; border: 1px solid var(--accent2)55; border-radius: var(--radius-sm); padding: 12px; margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+  .detail-actions { display: flex; flex-direction: column; gap: 8px; padding: 0 16px 16px; }
+
+  /* ---- MODAL ---- */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--bg2); border-radius: 24px 24px 0 0; padding: 20px 16px max(20px, env(safe-area-inset-bottom)); width: 100%; max-height: 85vh; overflow-y: auto; transform: translateY(20px); transition: transform 0.25s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; margin-bottom: 16px; }
+
+  /* ---- ALARMS SCREEN ---- */
+  .alarm-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; gap: 12px; align-items: center; }
+  .alarm-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+  .alarm-info { flex: 1; }
+  .alarm-name { font-weight: 700; font-size: 14px; }
+  .alarm-time { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .alarm-delete { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px; }
+
+  /* ---- SHARE MODAL ---- */
+  .share-text { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-size: 13px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; gap: 12px; }
+  .empty-state svg { width: 60px; height: 60px; color: var(--text3); }
+  .empty-state p { font-size: 14px; color: var(--text3); text-align: center; }
+  .empty-state h3 { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 18px; color: var(--text2); }
+
+  /* ---- FAB ---- */
+  .fab { position: fixed; bottom: 72px; right: 20px; width: 56px; height: 56px; background: var(--accent); border: none; border-radius: 50%; color: white; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(255,107,107,0.5); display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; }
+  .fab:active { transform: scale(0.92); }
+
+  /* ---- TOAST ---- */
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--accent3); color: var(--bg); padding: 12px 24px; border-radius: 50px; font-weight: 700; font-size: 14px; z-index: 200; transition: transform 0.3s; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ---- MINDMAP SCREEN ---- */
+  .mindmap-wrap { padding: 16px; }
+  .mindmap-root { background: var(--accent); border-radius: 12px; padding: 14px; text-align: center; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 16px; color: white; margin-bottom: 16px; }
+  .mindmap-branch { margin-left: 16px; position: relative; }
+  .mindmap-branch::before { content: ''; position: absolute; left: -16px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .mindmap-node { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 6px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; position: relative; }
+  .mindmap-node::before { content: ''; position: absolute; left: -16px; width: 14px; height: 2px; background: var(--border); top: 50%; }
+  .mindmap-sub { margin-left: 20px; position: relative; }
+  .mindmap-sub::before { content: ''; position: absolute; left: -16px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .mindmap-sub-node { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; margin-bottom: 4px; font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; cursor: pointer; position: relative; }
+  .mindmap-sub-node::before { content: ''; position: absolute; left: -16px; width: 14px; height: 2px; background: var(--border); top: 50%; }
+
+  .color-0 { border-left: 3px solid var(--accent); }
+  .color-1 { border-left: 3px solid var(--accent2); }
+  .color-2 { border-left: 3px solid var(--accent3); }
+  .color-3 { border-left: 3px solid var(--accent4); }
+  .color-4 { border-left: 3px solid #c77dff; }
+  .color-5 { border-left: 3px solid #ff9a3c; }
+
+  input[type=datetime-local] { color-scheme: dark; }
+  input[type=file] { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HOME SCREEN -->
+<div class="screen active" id="screen-home">
+  <div class="header">
+    <div class="header-row">
+      <h1>Oh! I <span>Forgot</span></h1>
+      <div style="position:relative">
+        <button class="back-btn" onclick="showScreen('screen-alarms')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <span class="alarm-badge" id="alarm-badge" style="display:none">0</span>
+      </div>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Search items, rooms, tags..." oninput="handleSearch(this.value)">
+    </div>
+  </div>
+  <div class="scroll-body" id="home-scroll">
+    <div id="search-results-wrap" style="display:none">
+      <div class="section-title">Search Results</div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+    <div id="home-content">
+      <div class="section-title">My Spaces</div>
+      <div class="rooms-grid" id="rooms-grid"></div>
+      <div class="section-title" style="margin-top:20px">Recent Items</div>
+      <div class="item-list" id="recent-items"></div>
+    </div>
+  </div>
+  <button class="fab" onclick="showScreen('screen-add')">+</button>
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="showScreen('screen-home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn" onclick="showScreen('screen-map')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Map</span>
+    </button>
+    <button class="nav-btn" onclick="showScreen('screen-add')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Add</span>
+    </button>
+    <button class="nav-btn" onclick="showScreen('screen-alarms')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Alarms</span>
+    </button>
+    <button class="nav-btn" onclick="showScreen('screen-settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>More</span>
+    </button>
+  </div>
+</div>
+
+<!-- ROOM DETAIL SCREEN -->
+<div class="screen" id="screen-room">
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="showScreen('screen-home')">&#8592;</button>
+      <h1 id="room-detail-title">Room</h1>
+      <button class="back-btn" onclick="openAddSublocModal()">+</button>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="section-title">Locations in <span id="room-detail-name"></span></div>
+    <div class="sublocation-list" id="sublocation-list"></div>
+    <div class="section-title" style="margin-top:16px">Items Here</div>
+    <div class="item-list" id="room-items-list"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="showScreen('screen-home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn" onclick="showScreen('screen-add')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Add Item</span>
+    </button>
+  </div>
+</div>
+
+<!-- ITEM DETAIL SCREEN -->
+<div class="screen" id="screen-item">
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" id="item-detail-back" onclick="showScreen('screen-home')">&#8592;</button>
+      <h1>Item Details</h1>
+      <button class="back-btn" onclick="deleteCurrentItem()">🗑</button>
+    </div>
+  </div>
+  <div class="scroll-body" style="padding:0 0 80px;">
+    <div id="item-detail-photo" class="detail-photo"></div>
+    <div class="detail-info">
+      <div class="detail-name" id="item-detail-name"></div>
+      <div class="detail-location-path" id="item-detail-path"></div>
+      <div class="detail-desc" id="item-detail-desc"></div>
+      <div class="detail-tags" id="item-detail-tags"></div>
+      <div class="detail-alarm" id="item-detail-alarm" style="display:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffd93d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div><div style="font-size:12px;font-weight:700;color:#ffd93d">Reminder set</div><div style="font-size:11px;color:var(--text3)" id="item-alarm-time"></div></div>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-secondary" onclick="shareCurrentItem()">📤 Share Location</button>
+      <button class="btn btn-secondary" onclick="editCurrentItem()">✏️ Edit Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT ITEM SCREEN -->
+<div class="screen" id="screen-add">
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="showScreen('screen-home')">&#8592;</button>
+      <h1 id="add-screen-title">Add Item</h1>
+      <div style="width:36px"></div>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="form-group">
+      <div class="form-label">Photo</div>
+      <div class="photo-area" id="photo-area" onclick="triggerCamera()">
+        <div class="photo-placeholder" id="photo-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <p>Tap to take photo or choose from gallery</p>
+        </div>
+      </div>
+      <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handlePhotoSelect(this)">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Item Name *</div>
+      <input type="text" class="form-input" id="item-name" placeholder="e.g. House Keys, Passport...">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Description</div>
+      <textarea class="form-input" id="item-desc" placeholder="Add notes about this item..."></textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Room / Space *</div>
+      <select class="form-input" id="item-room" onchange="updateSublocOptions()">
+        <option value="">Select a room...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Specific Location</div>
+      <select class="form-input" id="item-subloc">
+        <option value="">Select location...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Tags</div>
+      <div class="tag-chips" id="tag-chips">
+        <div class="tag-chip" onclick="toggleTag(this,'important')">Important</div>
+        <div class="tag-chip" onclick="toggleTag(this,'documents')">Documents</div>
+        <div class="tag-chip" onclick="toggleTag(this,'keys')">Keys</div>
+        <div class="tag-chip" onclick="toggleTag(this,'electronics')">Electronics</div>
+        <div class="tag-chip" onclick="toggleTag(this,'clothing')">Clothing</div>
+        <div class="tag-chip" onclick="toggleTag(this,'medicines')">Medicines</div>
+        <div class="tag-chip" onclick="toggleTag(this,'valuables')">Valuables</div>
+        <div class="tag-chip" onclick="toggleTag(this,'tools')">Tools</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Set Reminder</div>
+      <input type="datetime-local" class="form-input" id="item-alarm">
+    </div>
+    <button class="btn btn-primary" id="save-btn" onclick="saveItem()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Save Item
+    </button>
+  </div>
+</div>
+
+<!-- MAP / MINDMAP SCREEN -->
+<div class="screen" id="screen-map">
+  <div class="header">
+    <div class="header-row">
+      <h1>Mind <span>Map</span></h1>
+      <div style="width:36px"></div>
+    </div>
+  </div>
+  <div class="scroll-body" id="mindmap-body"></div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="showScreen('screen-home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Map</span>
+    </button>
+  </div>
+</div>
+
+<!-- ALARMS SCREEN -->
+<div class="screen" id="screen-alarms">
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="showScreen('screen-home')">&#8592;</button>
+      <h1>Reminders</h1>
+      <div style="width:36px"></div>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="item-list" id="alarms-list"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="showScreen('screen-home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+  </div>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div class="screen" id="screen-settings">
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="showScreen('screen-home')">&#8592;</button>
+      <h1>More</h1>
+      <div style="width:36px"></div>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="section-title">Manage Rooms</div>
+    <div id="settings-rooms-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+    <button class="btn btn-secondary" onclick="openAddRoomModal()">+ Add New Room</button>
+    <div class="section-title" style="margin-top:24px">App Info</div>
+    <div class="item-card" style="flex-direction:column;gap:6px;cursor:default;">
+      <div style="font-weight:700">Oh! I Forgot</div>
+      <div style="font-size:13px;color:var(--text3)">Version 1.0 · All data stored locally on your device</div>
+      <div style="font-size:13px;color:var(--text3)">Photos are compressed to save storage space</div>
+    </div>
+    <div style="height:8px"></div>
+    <button class="btn btn-danger" onclick="confirmClearAll()">🗑 Clear All Data</button>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn" onclick="showScreen('screen-home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>More</span>
+    </button>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-add-room">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add New Room</div>
+    <div class="form-group">
+      <div class="form-label">Room Name</div>
+      <input type="text" class="form-input" id="new-room-name" placeholder="e.g. Bedroom, Kitchen...">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Icon</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="icon-picker">
+        <span class="tag-chip" onclick="selectIcon(this,'🏠')">🏠</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🛏')">🛏</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🍳')">🍳</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🚪')">🚪</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🛁')">🛁</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🚗')">🚗</span>
+        <span class="tag-chip" onclick="selectIcon(this,'📦')">📦</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🏢')">🏢</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🌿')">🌿</span>
+        <span class="tag-chip" onclick="selectIcon(this,'🛠')">🛠</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Locations (comma separated)</div>
+      <input type="text" class="form-input" id="new-room-sublocs" placeholder="e.g. Drawer, Wardrobe, Shelf...">
+    </div>
+    <button class="btn btn-primary" onclick="saveNewRoom()">Add Room</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-secondary" onclick="closeModal('modal-add-room')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-subloc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Location</div>
+    <div class="form-group">
+      <div class="form-label">Location Name</div>
+      <input type="text" class="form-input" id="new-subloc-name" placeholder="e.g. Top Drawer, Left Shelf...">
+    </div>
+    <button class="btn btn-primary" onclick="saveNewSubloc()">Add Location</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-secondary" onclick="closeModal('modal-add-subloc')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-share">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📤 Share Location</div>
+    <div class="share-text" id="share-text"></div>
+    <div style="height:12px"></div>
+    <button class="btn btn-primary" onclick="copyShareText()">Copy to Clipboard</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-secondary" onclick="nativeShare()">Share via Apps</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-secondary" onclick="closeModal('modal-share')">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA STORE =====================
+let db = { rooms: [], items: [] };
+let currentRoom = null;
+let currentItem = null;
+let editingItemId = null;
+let selectedPhoto = null;
+let selectedIcon = '🏠';
+let selectedTags = [];
+
+function loadDB() {
+  try {
+    const d = localStorage.getItem('oif_db');
+    if (d) db = JSON.parse(d);
+    if (!db.rooms) db.rooms = [];
+    if (!db.items) db.items = [];
+  } catch(e) {}
+  // Seed default rooms if empty
+  if (db.rooms.length === 0) {
+    db.rooms = [
+      { id: uid(), name: 'Bedroom', icon: '🛏', sublocations: ['Wardrobe', 'Bedside Drawer', 'Under Bed', 'Top Shelf'] },
+      { id: uid(), name: 'Kitchen', icon: '🍳', sublocations: ['Upper Cabinet', 'Lower Cabinet', 'Fridge', 'Pantry', 'Drawer'] },
+      { id: uid(), name: 'Living Room', icon: '🏠', sublocations: ['TV Cabinet', 'Side Table', 'Bookshelf', 'Sofa Side'] },
+      { id: uid(), name: 'Bathroom', icon: '🛁', sublocations: ['Medicine Cabinet', 'Under Sink', 'Shelf'] },
+      { id: uid(), name: 'Garage', icon: '🚗', sublocations: ['Tool Shelf', 'Storage Box', 'Wall Hook'] },
+    ];
+    saveDB();
+  }
+}
+
+function saveDB() { localStorage.setItem('oif_db', JSON.stringify(db)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ===================== SCREEN NAV =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-home') { renderHome(); document.getElementById('search-input').value = ''; handleSearch(''); }
+  if (id === 'screen-map') renderMindmap();
+  if (id === 'screen-alarms') renderAlarms();
+  if (id === 'screen-settings') renderSettings();
+  if (id === 'screen-add' && !editingItemId) resetAddForm();
+}
+
+// ===================== HOME RENDER =====================
+function renderHome() {
+  renderRoomsGrid();
+  renderRecentItems();
+  renderAlarmBadge();
+}
+
+function renderRoomsGrid() {
+  const colors = ['c0','c1','c2','c3','c4','c5'];
+  const grid = document.getElementById('rooms-grid');
+  grid.innerHTML = '';
+  db.rooms.forEach((r, i) => {
+    const itemCount = db.items.filter(it => it.roomId === r.id).length;
+    const div = document.createElement('div');
+    div.className = `room-card ${colors[i % colors.length]}`;
+    div.onclick = () => openRoom(r.id);
+    div.innerHTML = `<div class="room-icon">${r.icon}</div><div class="room-name">${r.name}</div><div class="room-count">${itemCount} item${itemCount !== 1 ? 's' : ''}</div>`;
+    grid.appendChild(div);
+  });
+  const addBtn = document.createElement('div');
+  addBtn.className = 'add-room-btn';
+  addBtn.onclick = openAddRoomModal;
+  addBtn.innerHTML = `<span>+</span><p>Add Room</p>`;
+  grid.appendChild(addBtn);
+}
+
+function renderRecentItems() {
+  const list = document.getElementById('recent-items');
+  const sorted = [...db.items].sort((a,b) => b.createdAt - a.createdAt).slice(0, 10);
+  list.innerHTML = '';
+  if (sorted.length === 0) {
+    list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><h3>No items yet</h3><p>Tap + to add your first item</p></div>`;
+    return;
+  }
+  sorted.forEach(item => list.appendChild(buildItemCard(item)));
+}
+
+function buildItemCard(item) {
+  const room = db.rooms.find(r => r.id === item.roomId);
+  const div = document.createElement('div');
+  div.className = 'item-card';
+  div.onclick = () => openItem(item.id);
+  const thumb = item.photo
+    ? `<div class="item-thumb"><img src="${item.photo}" alt=""></div>`
+    : `<div class="item-thumb">${item.icon || '📦'}</div>`;
+  const loc = room ? `${room.name}${item.sublocation ? ' › ' + item.sublocation : ''}` : 'Unknown location';
+  const alarm = item.alarm ? `<div class="item-alarm">⏰ ${formatAlarm(item.alarm)}</div>` : '';
+  div.innerHTML = `${thumb}<div class="item-info"><div class="item-name">${item.name}</div><div class="item-location">📍 ${loc}</div><div class="item-desc">${item.description || ''}</div>${alarm}</div>`;
+  return div;
+}
+
+function renderAlarmBadge() {
+  const now = Date.now();
+  const active = db.items.filter(i => i.alarm && new Date(i.alarm).getTime() > now).length;
+  const badge = document.getElementById('alarm-badge');
+  if (active > 0) { badge.style.display = 'flex'; badge.textContent = active; }
+  else badge.style.display = 'none';
+}
+
+function formatAlarm(dt) {
+  return new Date(dt).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+// ===================== ROOM DETAIL =====================
+function openRoom(roomId) {
+  currentRoom = db.rooms.find(r => r.id === roomId);
+  if (!currentRoom) return;
+  document.getElementById('room-detail-title').textContent = currentRoom.icon + ' ' + currentRoom.name;
+  document.getElementById('room-detail-name').textContent = currentRoom.name;
+  const subList = document.getElementById('sublocation-list');
+  subList.innerHTML = '';
+  (currentRoom.sublocations || []).forEach(s => {
+    const cnt = db.items.filter(i => i.roomId === roomId && i.sublocation === s).length;
+    const div = document.createElement('div');
+    div.className = 'subloc-card';
+    div.innerHTML = `<span style="font-size:16px">📂</span><span class="subloc-name">${s}</span><span class="subloc-count">${cnt} items</span><span class="chevron">›</span>`;
+    div.onclick = () => filterBySubLoc(roomId, s);
+    subList.appendChild(div);
+  });
+  const roomItems = db.items.filter(i => i.roomId === roomId);
+  const riList = document.getElementById('room-items-list');
+  riList.innerHTML = '';
+  if (roomItems.length === 0) riList.innerHTML = `<div class="empty-state"><h3>No items yet</h3><p>Add items to this room</p></div>`;
+  else roomItems.forEach(item => riList.appendChild(buildItemCard(item)));
+  showScreen('screen-room');
+}
+
+function filterBySubLoc(roomId, sub) {
+  const riList = document.getElementById('room-items-list');
+  riList.innerHTML = '';
+  const items = db.items.filter(i => i.roomId === roomId && i.sublocation === sub);
+  if (items.length === 0) riList.innerHTML = `<div class="empty-state"><h3>Nothing here</h3><p>No items in ${sub}</p></div>`;
+  else items.forEach(item => riList.appendChild(buildItemCard(item)));
+  riList.scrollIntoView({ behavior: 'smooth' });
+}
+
+function openAddSublocModal() {
+  document.getElementById('new-subloc-name').value = '';
+  openModal('modal-add-subloc');
+}
+
+function saveNewSubloc() {
+  const name = document.getElementById('new-subloc-name').value.trim();
+  if (!name || !currentRoom) return;
+  currentRoom.sublocations = currentRoom.sublocations || [];
+  if (!currentRoom.sublocations.includes(name)) {
+    currentRoom.sublocations.push(name);
+    saveDB();
+    openRoom(currentRoom.id);
+  }
+  closeModal('modal-add-subloc');
+}
+
+// ===================== ITEM DETAIL =====================
+function openItem(itemId) {
+  currentItem = db.items.find(i => i.id === itemId);
+  if (!currentItem) return;
+  const room = db.rooms.find(r => r.id === currentItem.roomId);
+  const photoEl = document.getElementById('item-detail-photo');
+  photoEl.innerHTML = currentItem.photo ? `<img src="${currentItem.photo}" alt="">` : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:250px;background:var(--card2);font-size:80px">${currentItem.icon||'📦'}</div>`;
+  document.getElementById('item-detail-name').textContent = currentItem.name;
+  const path = document.getElementById('item-detail-path');
+  let pathStr = '';
+  if (room) pathStr += `<span>🏠 ${room.name}</span>`;
+  if (currentItem.sublocation) pathStr += `<span>›</span><span>📂 ${currentItem.sublocation}</span>`;
+  path.innerHTML = pathStr;
+  document.getElementById('item-detail-desc').textContent = currentItem.description || 'No description added.';
+  const tagsEl = document.getElementById('item-detail-tags');
+  tagsEl.innerHTML = (currentItem.tags || []).map(t => `<span class="detail-tag">${t}</span>`).join('');
+  const alarmEl = document.getElementById('item-detail-alarm');
+  if (currentItem.alarm) {
+    alarmEl.style.display = 'flex';
+    document.getElementById('item-alarm-time').textContent = formatAlarm(currentItem.alarm);
+  } else alarmEl.style.display = 'none';
+  showScreen('screen-item');
+}
+
+function deleteCurrentItem() {
+  if (!currentItem) return;
+  if (!confirm(`Delete "${currentItem.name}"?`)) return;
+  db.items = db.items.filter(i => i.id !== currentItem.id);
+  saveDB();
+  showToast('Item deleted');
+  showScreen('screen-home');
+}
+
+function editCurrentItem() {
+  if (!currentItem) return;
+  editingItemId = currentItem.id;
+  resetAddForm();
+  document.getElementById('add-screen-title').textContent = 'Edit Item';
+  document.getElementById('item-name').value = currentItem.name;
+  document.getElementById('item-desc').value = currentItem.description || '';
+  populateRoomSelects();
+  document.getElementById('item-room').value = currentItem.roomId;
+  updateSublocOptions();
+  document.getElementById('item-subloc').value = currentItem.sublocation || '';
+  if (currentItem.alarm) document.getElementById('item-alarm').value = currentItem.alarm.slice(0,16);
+  selectedTags = [...(currentItem.tags || [])];
+  document.querySelectorAll('.tag-chip').forEach(c => {
+    c.classList.toggle('selected', selectedTags.includes(c.textContent.toLowerCase().replace(/ /g,'')));
+  });
+  if (currentItem.photo) {
+    selectedPhoto = currentItem.photo;
+    const pa = document.getElementById('photo-area');
+    pa.innerHTML = `<img src="${currentItem.photo}" alt=""><div class="photo-overlay">📷 Change</div>`;
+    pa.onclick = triggerCamera;
+  }
+  showScreen('screen-add');
+}
+
+// ===================== ADD / SAVE ITEM =====================
+function resetAddForm() {
+  editingItemId = null;
+  selectedPhoto = null;
+  selectedTags = [];
+  document.getElementById('add-screen-title').textContent = 'Add Item';
+  document.getElementById('item-name').value = '';
+  document.getElementById('item-desc').value = '';
+  document.getElementById('item-alarm').value = '';
+  const pa = document.getElementById('photo-area');
+  pa.innerHTML = `<div class="photo-placeholder" id="photo-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><p>Tap to take photo or choose from gallery</p></div>`;
+  pa.onclick = triggerCamera;
+  document.querySelectorAll('.tag-chip').forEach(c => c.classList.remove('selected'));
+  populateRoomSelects();
+}
+
+function populateRoomSelects() {
+  const sel = document.getElementById('item-room');
+  sel.innerHTML = '<option value="">Select a room...</option>';
+  db.rooms.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = r.icon + ' ' + r.name; sel.appendChild(o); });
+  updateSublocOptions();
+}
+
+function updateSublocOptions() {
+  const roomId = document.getElementById('item-room').value;
+  const sel = document.getElementById('item-subloc');
+  sel.innerHTML = '<option value="">Select location...</option>';
+  const room = db.rooms.find(r => r.id === roomId);
+  if (room && room.sublocations) {
+    room.sublocations.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+  }
+}
+
+function triggerCamera() { document.getElementById('file-input').click(); }
+
+function handlePhotoSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    compressImage(e.target.result, 800, 0.7, (compressed) => {
+      selectedPhoto = compressed;
+      const pa = document.getElementById('photo-area');
+      pa.innerHTML = `<img src="${compressed}" alt=""><div class="photo-overlay">📷 Change</div>`;
+      pa.onclick = triggerCamera;
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(dataUrl, maxSize, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    let w = img.width, h = img.height;
+    if (w > maxSize || h > maxSize) {
+      if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+      else { w = Math.round(w * maxSize / h); h = maxSize; }
+    }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src = dataUrl;
+}
+
+function toggleTag(el, tag) {
+  el.classList.toggle('selected');
+  const t = tag.toLowerCase().replace(/ /g,'');
+  if (el.classList.contains('selected')) { if (!selectedTags.includes(t)) selectedTags.push(t); }
+  else selectedTags = selectedTags.filter(x => x !== t);
+}
+
+function saveItem() {
+  const name = document.getElementById('item-name').value.trim();
+  const roomId = document.getElementById('item-room').value;
+  if (!name) { showToast('Please enter an item name'); return; }
+  if (!roomId) { showToast('Please select a room'); return; }
+  const item = {
+    id: editingItemId || uid(),
+    name,
+    description: document.getElementById('item-desc').value.trim(),
+    roomId,
+    sublocation: document.getElementById('item-subloc').value || '',
+    tags: [...selectedTags],
+    alarm: document.getElementById('item-alarm').value || null,
+    photo: selectedPhoto,
+    icon: selectedPhoto ? null : '📦',
+    createdAt: editingItemId ? (db.items.find(i=>i.id===editingItemId)||{}).createdAt || Date.now() : Date.now(),
+    updatedAt: Date.now()
+  };
+  if (editingItemId) { const idx = db.items.findIndex(i=>i.id===editingItemId); if(idx>-1) db.items[idx] = item; }
+  else db.items.push(item);
+  saveDB();
+  editingItemId = null;
+  scheduleAlarm(item);
+  showToast(editingItemId ? 'Item updated!' : 'Item saved!');
+  showScreen('screen-home');
+}
+
+// ===================== SEARCH =====================
+function handleSearch(query) {
+  const hw = document.getElementById('home-content');
+  const rw = document.getElementById('search-results-wrap');
+  if (!query.trim()) { hw.style.display = ''; rw.style.display = 'none'; return; }
+  hw.style.display = 'none'; rw.style.display = '';
+  const q = query.toLowerCase();
+  const results = db.items.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    (i.description||'').toLowerCase().includes(q) ||
+    (i.tags||[]).some(t => t.includes(q)) ||
+    (i.sublocation||'').toLowerCase().includes(q) ||
+    (db.rooms.find(r=>r.id===i.roomId)||{name:''}).name.toLowerCase().includes(q)
+  );
+  const el = document.getElementById('search-results');
+  el.innerHTML = '';
+  if (results.length === 0) { el.innerHTML = `<div class="empty-state"><h3>No results</h3><p>Try searching with different keywords</p></div>`; return; }
+  results.forEach(item => {
+    const room = db.rooms.find(r=>r.id===item.roomId);
+    const div = document.createElement('div');
+    div.className = 'search-result-item';
+    div.onclick = () => openItem(item.id);
+    const img = item.photo ? `<div class="result-img"><img src="${item.photo}" alt=""></div>` : `<div class="result-img">${item.icon||'📦'}</div>`;
+    const loc = room ? `${room.icon} ${room.name}${item.sublocation?' › '+item.sublocation:''}` : '';
+    div.innerHTML = `${img}<div class="result-info"><div class="result-name">${item.name}</div><div class="result-path">📍 ${loc}</div></div>`;
+    el.appendChild(div);
+  });
+}
+
+// ===================== MINDMAP =====================
+function renderMindmap() {
+  const body = document.getElementById('mindmap-body');
+  body.innerHTML = '';
+  const root = document.createElement('div');
+  root.className = 'mindmap-root';
+  root.textContent = '🏡 My Home';
+  body.appendChild(root);
+  const colors = ['color-0','color-1','color-2','color-3','color-4','color-5'];
+  db.rooms.forEach((room, i) => {
+    const branch = document.createElement('div');
+    branch.className = 'mindmap-branch';
+    const node = document.createElement('div');
+    node.className = `mindmap-node ${colors[i%colors.length]}`;
+    node.innerHTML = `${room.icon} ${room.name} <span style="margin-left:auto;font-size:11px;color:var(--text3)">${db.items.filter(it=>it.roomId===room.id).length} items</span>`;
+    node.onclick = () => openRoom(room.id);
+    branch.appendChild(node);
+    const subBranch = document.createElement('div');
+    subBranch.className = 'mindmap-sub';
+    (room.sublocations||[]).forEach(sub => {
+      const items = db.items.filter(it=>it.roomId===room.id && it.sublocation===sub);
+      const sNode = document.createElement('div');
+      sNode.className = 'mindmap-sub-node';
+      sNode.innerHTML = `📂 ${sub} <span style="margin-left:auto;font-size:11px">${items.length}</span>`;
+      sNode.onclick = () => { openRoom(room.id); };
+      subBranch.appendChild(sNode);
+      items.forEach(item => {
+        const iNode = document.createElement('div');
+        iNode.className = 'mindmap-sub-node';
+        iNode.style.marginLeft = '20px';
+        iNode.style.fontSize = '11px';
+        iNode.innerHTML = `${item.photo?`<img src="${item.photo}" style="width:16px;height:16px;border-radius:3px;object-fit:cover">` : '📌'} ${item.name}`;
+        iNode.onclick = (e) => { e.stopPropagation(); openItem(item.id); };
+        subBranch.appendChild(iNode);
+      });
+    });
+    branch.appendChild(subBranch);
+    body.appendChild(branch);
+  });
+}
+
+// ===================== ALARMS =====================
+function scheduleAlarm(item) {
+  if (!item.alarm || !('Notification' in window)) return;
+  Notification.requestPermission().then(perm => {
+    if (perm === 'granted') {
+      const delay = new Date(item.alarm).getTime() - Date.now();
+      if (delay > 0) setTimeout(() => new Notification('Oh! I Forgot ⏰', { body: `Don't forget: ${item.name}`, icon: '/icon-192.png' }), delay);
+    }
+  });
+}
+
+function renderAlarms() {
+  const list = document.getElementById('alarms-list');
+  list.innerHTML = '';
+  const items = db.items.filter(i => i.alarm);
+  if (items.length === 0) { list.innerHTML = `<div class="empty-state"><h3>No reminders set</h3><p>Add reminders when saving items</p></div>`; return; }
+  items.sort((a,b) => new Date(a.alarm)-new Date(b.alarm)).forEach(item => {
+    const room = db.rooms.find(r=>r.id===item.roomId);
+    const div = document.createElement('div');
+    div.className = 'alarm-item';
+    const past = new Date(item.alarm) < new Date();
+    div.innerHTML = `<div class="alarm-dot" style="background:${past?'var(--text3)':'var(--accent2)'}"></div><div class="alarm-info"><div class="alarm-name">${item.name}</div><div class="alarm-time">${formatAlarm(item.alarm)} ${past?'(past)':''}</div><div class="alarm-time" style="color:var(--accent4)">${room?room.name:''} ${item.sublocation?'› '+item.sublocation:''}</div></div><button class="alarm-delete" onclick="removeAlarm('${item.id}')">×</button>`;
+    div.onclick = (e) => { if(e.target.tagName!=='BUTTON') openItem(item.id); };
+    list.appendChild(div);
+  });
+}
+
+function removeAlarm(itemId) {
+  const item = db.items.find(i=>i.id===itemId);
+  if (item) { item.alarm = null; saveDB(); renderAlarms(); renderAlarmBadge(); }
+}
+
+// ===================== SHARE =====================
+function shareCurrentItem() {
+  if (!currentItem) return;
+  const room = db.rooms.find(r=>r.id===currentItem.roomId);
+  const loc = room ? `${room.icon} ${room.name}${currentItem.sublocation?' > '+currentItem.sublocation:''}` : 'Unknown';
+  const text = `📍 *Oh! I Forgot — Item Location*\n\n*${currentItem.name}*\nLocation: ${loc}\n${currentItem.description?'Notes: '+currentItem.description+'\n':''}${currentItem.alarm?'Reminder: '+formatAlarm(currentItem.alarm)+'\n':''}\nShared from Oh! I Forgot app`;
+  document.getElementById('share-text').textContent = text;
+  openModal('modal-share');
+}
+
+function copyShareText() {
+  const text = document.getElementById('share-text').textContent;
+  navigator.clipboard.writeText(text).then(() => { showToast('Copied!'); closeModal('modal-share'); }).catch(() => showToast('Copy failed'));
+}
+
+function nativeShare() {
+  const text = document.getElementById('share-text').textContent;
+  if (navigator.share) { navigator.share({ title: 'Oh! I Forgot', text }); closeModal('modal-share'); }
+  else { copyShareText(); }
+}
+
+// ===================== ROOMS MANAGEMENT =====================
+function renderSettings() {
+  const list = document.getElementById('settings-rooms-list');
+  list.innerHTML = '';
+  db.rooms.forEach(room => {
+    const cnt = db.items.filter(i=>i.roomId===room.id).length;
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    div.style.cursor = 'default';
+    div.innerHTML = `<div class="item-thumb" style="font-size:28px">${room.icon}</div><div class="item-info"><div class="item-name">${room.name}</div><div class="item-location">${cnt} items · ${(room.sublocations||[]).length} locations</div></div><button style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px" onclick="deleteRoom('${room.id}')">×</button>`;
+    list.appendChild(div);
+  });
+}
+
+function openAddRoomModal() { document.getElementById('new-room-name').value = ''; document.getElementById('new-room-sublocs').value = ''; document.querySelectorAll('#icon-picker .tag-chip').forEach(c=>c.classList.remove('selected')); selectedIcon='🏠'; openModal('modal-add-room'); }
+
+function selectIcon(el, icon) { document.querySelectorAll('#icon-picker .tag-chip').forEach(c=>c.classList.remove('selected')); el.classList.add('selected'); selectedIcon = icon; }
+
+function saveNewRoom() {
+  const name = document.getElementById('new-room-name').value.trim();
+  if (!name) return;
+  const sublocs = document.getElementById('new-room-sublocs').value.split(',').map(s=>s.trim()).filter(Boolean);
+  db.rooms.push({ id: uid(), name, icon: selectedIcon, sublocations: sublocs });
+  saveDB();
+  closeModal('modal-add-room');
+  showToast('Room added!');
+  renderHome();
+  renderSettings();
+}
+
+function deleteRoom(roomId) {
+  const cnt = db.items.filter(i=>i.roomId===roomId).length;
+  if (cnt > 0 && !confirm(`This room has ${cnt} items. Delete room and all items?`)) return;
+  db.rooms = db.rooms.filter(r=>r.id!==roomId);
+  db.items = db.items.filter(i=>i.roomId!==roomId);
+  saveDB();
+  renderSettings();
+  showToast('Room deleted');
+}
+
+function confirmClearAll() {
+  if (!confirm('Delete ALL data? This cannot be undone.')) return;
+  db = { rooms: [], items: [] };
+  saveDB();
+  loadDB();
+  showToast('All data cleared');
+  showScreen('screen-home');
+}
+
+// ===================== MODAL UTILS =====================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); }));
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===================== INIT =====================
+loadDB();
+renderHome();
+
+// Check for due alarms on load
+db.items.forEach(item => {
+  if (item.alarm) {
+    const delay = new Date(item.alarm).getTime() - Date.now();
+    if (delay > 0 && delay < 86400000) scheduleAlarm(item);
+  }
+});
+</script>
+</body>
+</html>
