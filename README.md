@@ -7,27 +7,7 @@
 
 This is a **Progressive Web App (PWA)** — it installs like a native app, works offline, and stores all photos locally on your phone.
 
-### Step 1 — Host the app (choose one option)
-
-**Option A — Free hosting with GitHub Pages (Recommended)**
-1. Create a free account at https://github.com
-2. Create a new repository called `oh-i-forgot`
-3. Upload all 3 files: `index.html`, `manifest.json`, `sw.js`
-4. Go to Settings → Pages → Source: "main branch"
-5. Your app URL will be: `https://yourusername.github.io/oh-i-forgot`
-
-**Option B — Free hosting with Netlify**
-1. Go to https://netlify.com and sign up free
-2. Drag and drop the folder onto the deploy zone
-3. You get an instant HTTPS URL
-
-**Option C — Run locally using VS Code + Live Server**
-1. Install VS Code + Live Server extension
-2. Open the folder and start Live Server (must be on HTTPS for camera to work)
-
----
-
-### Step 2 — Install on Android
+Install on Android
 
 1. Open Chrome on your Android phone
 2. Navigate to your app URL
